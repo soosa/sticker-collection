@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="assets/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon-180x180.png">
+  <title>Missing Stickers Checklist</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#f7f7f8;color:#222;line-height:1.45}
+    header{position:sticky;top:0;background:white;border-bottom:1px solid #ddd;padding:16px 20px;z-index:10}
+    h1{margin:0 0 12px;font-size:24px}.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    select,input{font:inherit;padding:8px 10px;border:1px solid #bbb;border-radius:8px;background:white}.count{color:#555}
+    main{max-width:980px;margin:20px auto;padding:0 16px}.team{background:white;border:1px solid #ddd;border-radius:12px;margin:14px 0;padding:16px;box-shadow:0 1px 3px #0001}
+    h2{margin:0 0 10px;font-size:20px}.team-count{font-size:14px;color:#666;font-weight:400}
+    table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}th{background:#fafafa}.no{white-space:nowrap;font-weight:600;width:120px}
+    .hidden{display:none}.note{color:#666;font-size:14px;margin-top:8px}.top{margin-left:auto}button{font:inherit;padding:8px 10px;border:0;border-radius:8px;background:#222;color:white;cursor:pointer}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Missing Stickers Checklist</h1>
+  <div class="controls">
+    <label for="teamFilter">Show team:</label>
+    <select id="teamFilter"><option value="all">All teams</option></select>
+    <input id="search" type="search" placeholder="Search number or name…" />
+    <!-- <button id="printBtn">Print</button> -->
+    <span class="count" id="count"></span>
+  </div>
+</header>
+<main id="list"></main>
+<script>
+const teams = [
+{country:'🇿🇦 South Africa', items:[['RSA 3','Sphephelo Sithole'],['RSA 4','Aubrey Modiba'],['RSA 5','Siyabonga Ngezana'],['RSA 6','Mosa Lebusa'],['RSA 7','Fawaaz Basadien'],['RSA 8','Oswin Appollis'],['RSA 10','Thalente Mbatha'],['RSA 12','Team Badge'],['RSA 14','Bathusi Aubaas'],['RSA 15','Iqraam Rayners'],['RSA 16','Nkosinathi Sibisi'],['RSA 18','Grant Kekana'],['RSA 20','Team Photo']]},
+{country:'🇲🇽 Mexico', items:[['MEX 1','Team Badge'],['MEX 2','Luis Malagón'],['MEX 3','Johan Vásquez'],['MEX 4','Jorge Sánchez'],['MEX 6','Jesús Gallardo'],['MEX 7','Israel Reyes'],['MEX 8','Diego Lainez'],['MEX 9','Carlos Rodríguez'],['MEX 10','Edson Álvarez'],['MEX 15','Hirving Lozano'],['MEX 17','Raúl Jiménez'],['MEX 18','Team Photo']]},
+{country:'🇰🇷 Korea Republic', items:[['KOR 1','Team Badge'],['KOR 2','Hyeon-woo Jo'],['KOR 4','Min-jae Kim'],['KOR 6','Wooyeong Jeong'],['KOR 7','In-beom Hwang'],['KOR 10','Jae-sung Lee'],['KOR 13','Team Photo'],['KOR 15','Jens Castrop'],['KOR 20','Hyeon-gyu Oh']]},
+{country:'🇨🇿 Czechia', items:[['CZE 1','Team Badge'],['CZE 2','Matěj Kovář'],['CZE 3','Jindřich Staněk'],['CZE 4','Ladislav Krejčí'],['CZE 9','Vít Sadílek'],['CZE 10','Lukáš Provod'],['CZE 11','Lukáš Červ'],['CZE 12','Tomáš Souček'],['CZE 14','Pavel Šulc'],['CZE 19','Adam Hložek']]},
+{country:'🇨🇦 Canada', items:[['CAN 1','Team Badge'],['CAN 4','Alistair Johnston'],['CAN 5','Samuel Adekugbe'],['CAN 6','Richie Laryea'],['CAN 7','Derek Cornelius'],['CAN 8','Moïse Bombito'],['CAN 11','Ismaël Koné'],['CAN 12','Jonathan Osorio'],['CAN 14','Jacob Shaffelburg'],['CAN 16','Niko Sigur'],['CAN 17','Tajon Buchanan'],['CAN 18','Liam Millar'],['CAN 19','Cyle Larin'],['CAN 20','Jonathan David']]},
+{country:'🇨🇭 Switzerland', items:[['SUI 4','Manuel Akanji'],['SUI 5','Ricardo Rodríguez'],['SUI 9','Granit Xhaka'],['SUI 10','Denis Zakaria'],['SUI 14','Ardon Jashari'],['SUI 17','Breel Embolo'],['SUI 18','Ruben Vargas']]},
+{country:'🇶🇦 Qatar', items:[['QAT 1','Team Badge'],['QAT 6','Boualem Khoukhi'],['QAT 7','Pedro Miguel'],['QAT 9','Mohammed Muntari'],['QAT 11','Assim Madibo'],['QAT 12','Hamed Faleh'],['QAT 18','Akram Afif'],['QAT 20','Ahmed Al-Rawi']]},
+{country:'🇧🇦 Bosnia and Herzegovina', items:[['BIH 5','Tarik Muharemović'],['BIH 6','Nihad Mujakić'],['BIH 7','Nikola Katić'],['BIH 8','Amir Hadžiahmetović'],['BIH 9','Benjamin Tahirović'],['BIH 10','Armin Gigović'],['BIH 12','Ivan Bašić'],['BIH 15','Esmir Bajraktarević'],['BIH 16','Amar Memić'],['BIH 17','Ermedin Demirović'],['BIH 20','Haris Tabaković']]},
+{country:'🇲🇦 Morocco', items:[['MAR 2','Yassine Bounou'],['MAR 3','Ayyoub El Kaabi'],['MAR 4','Achraf Hakimi'],['MAR 5','Noussair Mazraoui'],['MAR 6','Nayef Aguerd'],['MAR 9','Adam Masina'],['MAR 11','Azzedine Ounahi'],['MAR 12','Eliesse Ben Seghir'],['MAR 13','Team Photo'],['MAR 15','Ismael Saibari'],['MAR 18','Soufiane Rahimi'],['MAR 19','Brahim Díaz']]},
+{country:'🇧🇷 Brazil', items:[['BRA 1','Team Badge'],['BRA 2','Alisson'],['BRA 5','Éder Militão'],['BRA 6','Gabriel Magalhães'],['BRA 7','Danilo'],['BRA 10','Casemiro'],['BRA 12','Luiz Henrique'],['BRA 14','Vinícius Júnior'],['BRA 15','Rodrygo'],['BRA 16','João Pedro'],['BRA 18','Gabriel Martinelli'],['BRA 20','Estêvão']]},
+{country:'🇭🇹 Haiti', items:[['HAI 2','Johny Placide'],['HAI 3','Carlens Arcus'],['HAI 8','Garven Metusala'],['HAI 14','Christopher Attys'],['HAI 15','Derrick Étienne Jr.'],['HAI 19','Louicius Don Deedson']]},
+{country:'🏴 Scotland', items:[['SCO 1','Team Badge'],['SCO 3','Jack Hendry'],['SCO 5','Aaron Hickey'],['SCO 6','Andrew Robertson'],['SCO 7','Scott McKenna'],['SCO 8','John Souttar'],['SCO 10','Grant Hanley'],['SCO 13','Team Photo'],['SCO 14','Lewis Ferguson'],['SCO 15','Ryan Christie'],['SCO 18','Lyndon Dykes'],['SCO 20','Ben Doak']]},
+{country:'🇺🇸 United States', items:[['USA 3','Chris Richards'],['USA 4','Tim Ream'],['USA 6','Alex Freeman'],['USA 8','Tyler Adams'],['USA 10','Weston McKennie'],['USA 13','Team Photo'],['USA 18','Ricardo Pepi'],['USA 19','Haji Wright']]},
+{country:'🇵🇾 Paraguay', items:[['PAR 2','Roberto Fernández'],['PAR 9','Mathías Villasanti'],['PAR 10','Diego Gómez'],['PAR 11','Damián Bobadilla'],['PAR 13','Team Photo'],['PAR 16','Alejandro Romero Gamarra'],['PAR 17','Miguel Almirón']]},
+{country:'🇦🇺 Australia', items:[['AUS 2','Mathew Ryan'],['AUS 4','Harry Souttar'],['AUS 5','Alessandro Circati'],['AUS 6','Jordan Bos'],['AUS 12','Riley McGree'],['AUS 15','Connor Metcalfe'],['AUS 16','Aziz Behich'],['AUS 18','Team Photo']]},
+{country:'🇹🇷 Türkiye', items:[['TUR 2','Uğurcan Çakır'],['TUR 4','Zeki Çelik'],['TUR 7','Merih Demiral'],['TUR 8','Ferdi Kadıoğlu'],['TUR 9','Kaan Ayhan'],['TUR 10','İsmail Yüksek'],['TUR 14','Arda Güler'],['TUR 16','Yunus Akgün'],['TUR 17','Can Uzun'],['TUR 18','Barış Alper Yılmaz'],['TUR 19','Kerem Akturkoglu'],['TUR 20','Kenan Yıldız']]},
+{country:'🇩🇪 Germany', items:[['GER 1','Team Badge'],['GER 4','David Raum'],['GER 5','Nico Schlotterbeck'],['GER 9','Maximilian Mittelstädt'],['GER 10','Joshua Kimmich'],['GER 11','Florian Wirtz'],['GER 12','Felix Nmecha'],['GER 13','Team Photo'],['GER 16','Serge Gnabry'],['GER 19','Karim Adeyemi']]},
+{country:'🇨🇼 Curaçao', items:[['CUW 3','Roshon van Eijma'],['CUW 5','Jurien Gaari'],['CUW 6','Joshua Brenet'],['CUW 8','Shurandy Sambo'],['CUW 12','Leandro Bacuna'],['CUW 16','Jearl Margaritha'],['CUW 19','Ferdyne Kastermeer'],['CUW 20','Sontje Hansen']]},
+{country:"🇨🇮 Côte d'Ivoire", items:[['CIV 2','Yahia Fofana'],['CIV 4','Wilfried Singo'],['CIV 5','Odilon Kossounou'],['CIV 7','Willy Boly'],['CIV 8','Emmanuel Agbadou'],['CIV 9','Ousmane Diomandé'],['CIV 10','Franck Kessié'],['CIV 11','Seko Fofana'],['CIV 12','Ibrahim Sangaré'],['CIV 16','Sébastien Haller'],['CIV 17','Simon Adingra'],['CIV 20','Oumar Diakité']]},
+{country:'🇪🇨 Ecuador', items:[['ECU 4','Piero Hincapié'],['ECU 6','Willian Pacho'],['ECU 7','Angelo Preciado'],['ECU 8','José Cifuentes'],['ECU 10','Alan Franco'],['ECU 11','Kendry Páez'],['ECU 14','Jhon Yeboah'],['ECU 16','Gonzalo Plata'],['ECU 18','Alan Minda'],['ECU 20','Pedro Vite']]},
+{country:'🇳🇱 Netherlands', items:[['NED 2','Bart Verbruggen'],['NED 4','Micky van de Ven'],['NED 5','Jurriën Timber'],['NED 6','Denzel Dumfries'],['NED 7','Nathan Aké'],['NED 9','Jurriën Veerman'],['NED 10','Tijjani Reijnders'],['NED 12','Teun Koopmeiners'],['NED 13','Team Photo'],['NED 17','Memphis Depay'],['NED 18','Donyell Malen'],['NED 19','Wout Weghorst']]},
+{country:'🇯🇵 Japan', items:[['JPN 3','Takehiro Tomiyasu'],['JPN 5','Junya Ito'],['JPN 6','Shuto Machino'],['JPN 10','Ao Tanaka'],['JPN 12','Takefusa Kubo'],['JPN 15','Keito Nakamura'],['JPN 16','Takumi Minamino'],['JPN 18','Junya Ito'],['JPN 19','Ko Itakura'],['JPN 20','Ayase Ueda']]},
+{country:'🇸🇪 Sweden', items:[['SWE 1','Team Badge'],['SWE 2','Viktor Johansson'],['SWE 5','Emil Holm'],['SWE 8','Lucas Bergvall'],['SWE 12','Mattias Svanberg'],['SWE 16','Roony Bardghji'],['SWE 18','Anthony Elanga'],['SWE 19','Alexander Isak']]},
+{country:'🇹🇳 Tunisia', items:[['TUN 3','Aymen Dahmen'],['TUN 5','Montassar Talbi'],['TUN 6','Yassine Meriah'],['TUN 8','Dylan Bronn'],['TUN 12','Mohamed Ali Ben Romdhane'],['TUN 14','Hannibal Mejbri'],['TUN 16','Elias Saad'],['TUN 19','Seifeddine Jaziri'],['TUN 20','Naim Sliti']]},
+{country:'🇧🇪 Belgium', items:[['BEL 2','Thibaut Courtois'],['BEL 4','Timothy Castagne'],['BEL 6','Brandon Mechele'],['BEL 7','Maxim De Cuyper'],['BEL 14','Hans Vanaken'],['BEL 15','Kevin De Bruyne'],['BEL 17','Charles De Ketelaere'],['BEL 18','Leandro Trossard'],['BEL 19','Loïs Openda'],['BEL 20','Romelu Lukaku']]},
+{country:'🇪🇬 Egypt', items:[['EGY 2','Mohamed El Shenawy'],['EGY 4','Mohamed Hany'],['EGY 5','Yasser Ibrahim'],['EGY 7','Rami Rabia'],['EGY 8','Hossam Abdelmaguid'],['EGY 10','Marwan Attia'],['EGY 11','Zizo'],['EGY 15','Emam Ashour'],['EGY 18','Mostafa Mohamed'],['EGY 20','Omar Marmoush']]},
+{country:'🇮🇷 Iran', items:[['IRN 3','Morteza Pouraliganji'],['IRN 7','Mehdi Taremi'],['IRN 8','Hossein Kanaani'],['IRN 9','Sadegh Moharrami'],['IRN 11','Saeed Ezatolahi'],['IRN 12','Saman Ghoddos'],['IRN 14','Omid Noorafkan'],['IRN 15','Roozbeh Cheshmi'],['IRN 16','Mohammad Mohebi'],['IRN 17','Sardar Azmoun'],['IRN 18','Mehdi Torabi'],['IRN 19','Alireza Jahanbakhsh']]},
+{country:'🇳🇿 New Zealand', items:[['NZL 1','Max Crocombe'],['NZL 4','Liberato Cacace'],['NZL 7','Tyler Bindon'],['NZL 18','Callum McCowatt'],['NZL 19','Joe Bell']]},
+{country:'🇪🇸 Spain', items:[['ESP 2','Unai Simón'],['ESP 6','Pedro Porro'],['ESP 7','Martín Zubimendi'],['ESP 11','Pedri'],['ESP 14','Fabián Ruiz'],['ESP 16','Mikel Merino']]},
+{country:'🇨🇻 Cabo Verde', items:[['CPV 3','Logan Costa'],['CPV 6','Stopira'],['CPV 8','João Paulo Fernandes'],['CPV 12','Jamiro Monteiro'],['CPV 15','Kevin Pina'],['CPV 20','Ryan Mendes']]},
+{country:'🇸🇦 Saudi Arabia', items:[['KSA 4','Hassan Kadesh'],['KSA 5','Musab Al Juwayr'],['KSA 6','Faisal Al Ghamdi'],['KSA 7','Mohannad Al Shanqeeti'],['KSA 9','Musab Al Juwayr'],['KSA 10','Ziyad Al Johani'],['KSA 12','Nasser Al Dawsari'],['KSA 13','Team Photo'],['KSA 15','Marwan Al Sahafi'],['KSA 16','Saleh Al Shehri'],['KSA 17','Abdullah Al Hamdan'],['KSA 19','Saleh Al Shehri'],['KSA 20','Abdullah Al Hamdan']]},
+{country:'🇺🇾 Uruguay', items:[['URU 2','Sergio Rochet'],['URU 3','Santiago Mele'],['URU 7','Mathías Olivera'],['URU 16','Maximiliano Araújo'],['URU 18','Federico Viñas']]},
+{country:'🇫🇷 France', items:[['FRA 9','Aurélien Tchouaméni'],['FRA 10','Eduardo Camavinga'],['FRA 11','Manu Koné'],['FRA 12','Adrien Rabiot'],['FRA 13','Team Badge'],['FRA 15','Ousmane Dembélé'],['FRA 17','Désiré Doué']]},
+{country:'🇸🇳 Senegal', items:[['SEN 1','Team Badge'],['SEN 4','Moussa Niakhaté'],['SEN 7','El Hadji Malick Diouf'],['SEN 8','Kalidou Koulibaly'],['SEN 9','Idrissa Gana Gueye'],['SEN 14','Lamine Camara'],['SEN 15','Sadio Mané'],['SEN 16','Ismaïla Sarr'],['SEN 20','Krépin Diatta']]},
+{country:'🇮🇶 Iraq', items:[['IRQ 2','Jalal Hassan'],['IRQ 3','Rebin Sulaka'],['IRQ 4','Hussein Ali'],['IRQ 5','Aymen Hussein'],['IRQ 7','Zidane Iqbal'],['IRQ 12','Ali Jasim'],['IRQ 14','Youssef Amyn'],['IRQ 16','Mervan Faraj'],['IRQ 18','Ali Al Hamadi'],['IRQ 20','Mohanad Ali']]},
+{country:'🇳🇴 Norway', items:[['NOR 1','Team Badge'],['NOR 4','Leo Østigård'],['NOR 5','Kristoffer Ajer'],['NOR 6','Marcus Holmgren Pedersen'],['NOR 7','David Møller Wolfe'],['NOR 9','Morten Thorsby'],['NOR 10','Martin Ødegaard'],['NOR 11','Sander Berge'],['NOR 12','Andreas Schjelderup'],['NOR 13','Team Photo'],['NOR 15','Erling Haaland'],['NOR 16','Alexander Sørloth'],['NOR 20','Oscar Bobb']]},
+{country:'🇦🇷 Argentina', items:[['ARG 1','Team Badge'],['ARG 2','Emiliano Martínez'],['ARG 5','Nicolás Otamendi'],['ARG 7','Leonardo Balerdi'],['ARG 8','Enzo Fernández'],['ARG 12','Leandro Paredes'],['ARG 13','Team Photo'],['ARG 14','Nico Paz'],['ARG 15','Bruno Mastantuono'],['ARG 19','Julián Álvarez']]},
+{country:'🇩🇿 Algeria', items:[['ALG 1','Team Badge'],['ALG 2','Alexis Guendouz'],['ALG 4','Youcef Atal'],['ALG 7','Aïssa Mandi'],['ALG 8','Ismaël Bennacer'],['ALG 9','Houssem Aouar'],['ALG 11','Ramiz Zerrouki'],['ALG 13','Team Photo'],['ALG 14','Farès Chaïbi'],['ALG 15','Amine Gouiri'],['ALG 17','Anis Hadj Moussa']]},
+{country:'🇦🇹 Austria', items:[['AUT 2','Alexander Schlager'],['AUT 3','Patrick Pentz'],['AUT 9','Aleksandar Prass'],['AUT 10','Xaver Schlager'],['AUT 12','Konrad Laimer'],['AUT 13','Team Photo'],['AUT 16','Romano Schmid'],['AUT 17','Patrick Wimmer'],['AUT 20','Marko Arnautović']]},
+{country:'🇯🇴 Jordan', items:[['JOR 1','Team Badge'],['JOR 2','Yazeed Abulaila'],['JOR 3','Ihsan Haddad'],['JOR 8','Mohammad Abualnadi'],['JOR 14','Aamer Jamous'],['JOR 18','Ali Olwan']]},
+{country:'🇵🇹 Portugal', items:[['POR 1','Team Badge'],['POR 2','Diogo Costa'],['POR 7','Nuno Mendes'],['POR 8','Gonçalo Inácio'],['POR 9','Bernardo Silva'],['POR 13','Team Photo'],['POR 15','Cristiano Ronaldo'],['POR 16','Francisco Trincão'],['POR 19','Pedro Neto']]},
+{country:'🇨🇩 DR Congo', items:[['COD 1','Team Badge'],['COD 11','Samuel Moutoussamy'],['COD 12','Noah Sadiki'],['COD 13','Team Photo'],['COD 14','Théo Bongonda'],['COD 18','Fiston Mayele'],['COD 20','Nathanael Mbuku']]},
+{country:'🇺🇿 Uzbekistan', items:[['UZB 2','Utkir Yusupov'],['UZB 4','Sherzod Nasrullaev'],['UZB 5','Umar Eshmurodov'],['UZB 7','Rustam Ashurmatov'],['UZB 11','Otabek Shukurov'],['UZB 15','Khojimat Erkinov'],['UZB 19','Igor Sergeev'],['UZB 20','Abbosbek Fayzullaev']]},
+{country:'🇨🇴 Colombia', items:[['COL 2','Camilo Vargas'],['COL 4','Davinson Sánchez'],['COL 5','Yerry Mina'],['COL 11','Kevin Castaño'],['COL 17','Jhon Arias'],['COL 20','Luis Díaz']]},
+{country:'🇬🇧 England', items:[['ENG 1','Team Badge'],['ENG 2','Jordan Pickford'],['ENG 4','Marc Guéhi'],['ENG 7','Reece James'],['ENG 8','Dan Burn'],['ENG 11','Jude Bellingham'],['ENG 14','Morgan Rogers'],['ENG 18','Harry Kane'],['ENG 19','Marcus Rashford'],['ENG 20','Ollie Watkins']]},
+{country:'🇭🇷 Croatia', items:[['CRO 2','Dominik Livaković'],['CRO 3','Duje Ćaleta-Car'],['CRO 4','Joško Gvardiol'],['CRO 5','Josip Stanišić'],['CRO 9','Luka Modrić'],['CRO 11','Marin Baturina'],['CRO 14','Mario Pašalić'],['CRO 15','Petar Sučić'],['CRO 17','Marko Pašalić'],['CRO 19','Andrej Kramarić']]},
+{country:'🇬🇭 Ghana', items:[['GHA 1','Team Badge'],['GHA 2','Lawrence Ati-Zigi'],['GHA 3','Tariq Lamptey'],['GHA 5','Abdul Samed Salis'],['GHA 7','Gideon Mensah'],['GHA 8','Caleb Yirenkyi'],['GHA 11','Salis Abdul Samed'],['GHA 16','Jordan Ayew'],['GHA 17','Andre Ayew'],['GHA 19','Osman Bukari'],['GHA 20','Antoine Semenyo']]},
+{country:'🇵🇦 Panama', items:[['PAN 3','Luis Mejía'],['PAN 4','Fidel Escobar'],['PAN 6','Iván Anderson Murillo'],['PAN 7','Eric Davis'],['PAN 9','César Blackman'],['PAN 11','Aníbal Godoy'],['PAN 12','Adalberto Carrasquilla'],['PAN 14','Édgar Bárcenas'],['PAN 15','Carlos Harvey'],['PAN 17','José Fajardo'],['PAN 19','José Luis Rodríguez']]},
+{country:'🥤 Coca-Cola', items:[['CC3','Eduardo Camavinga'],['CC4','Joško Gvardiol'],['CC5','Federico Valverde'],['CC6','Virgil van Dijk'],['CC7','Alphonso Davies'],['CC8','Raúl Jiménez'],['CC9','William Saliba'],['CC11','Harry Kane']]},
+{country:'🏆 Football World Cup', items:[['FWC 01','Official Emblem 1'],['FWC 02','Official Emblem 2'],['FWC 05','Official Ball'],['FWC 08','USA Host Country Emblem'],['FWC 10','Brazil 1950'],['FWC 12','Chile 1962'],['FWC 13','Germany 1974'],['FWC 14','Mexico City 1986'],['FWC 15','USA 1994'],['FWC 19','Qatar 2022']]}
+];
+const select = document.getElementById('teamFilter');
+const list = document.getElementById('list');
+const search = document.getElementById('search');
+const count = document.getElementById('count');
+
+function sortName(country){
+  return country.replace(/^\S+\s+/, '').toLowerCase();
+}
+
+function isSpecial(country){
+  return country.includes('Football World Cup') || country.includes('Coca-Cola');
+}
+
+const sortedTeams = [...teams].sort((a,b)=>{
+  const specialOrder = ['Football World Cup', 'Coca-Cola'];
+  const aSpecial = isSpecial(a.country);
+  const bSpecial = isSpecial(b.country);
+
+  if (aSpecial || bSpecial) {
+    if (aSpecial && bSpecial) {
+      return specialOrder.findIndex(x => a.country.includes(x)) - specialOrder.findIndex(x => b.country.includes(x));
+    }
+    return aSpecial ? -1 : 1;
+  }
+
+  return sortName(a.country).localeCompare(sortName(b.country));
+});
+
+const total = sortedTeams.reduce((sum,t)=>sum+t.items.length,0);
+
+sortedTeams.forEach((t,i)=>{
+  const opt=document.createElement('option');
+  opt.value=i;
+  opt.textContent=`${t.country} (${t.items.length})`;
+  select.appendChild(opt);
+});
+
+function render(){
+  const selected=select.value, q=search.value.trim().toLowerCase();
+  list.innerHTML=''; let visibleTeams=0, visibleItems=0;
+
+  sortedTeams.forEach((team,i)=>{
+    if(selected!=='all' && selected!==String(i)) return;
+
+    const items=team.items.filter(([no,name]) =>
+      !q ||
+      no.toLowerCase().includes(q) ||
+      name.toLowerCase().includes(q) ||
+      team.country.toLowerCase().includes(q)
+    );
+
+    if(!items.length) return;
+
+    visibleTeams++;
+    visibleItems += items.length;
+
+    const section=document.createElement('section');
+    section.className='team';
+    section.innerHTML=`<h2>${team.country} <span class="team-count">${items.length} missing</span></h2><table><thead><tr><th>No.</th><th>Name</th></tr></thead><tbody>${items.map(([no,name])=>`<tr><td class="no">${no}</td><td>${name}</td></tr>`).join('')}</tbody></table>`;
+    list.appendChild(section);
+  });
+
+  count.textContent = `${visibleItems} shown / ${total} total`;
+}
+
+select.addEventListener('change', render);
+search.addEventListener('input', render);
+// document.getElementById('printBtn').addEventListener('click',()=>window.print());
+render();
+</script>
+</body>
+</html>
